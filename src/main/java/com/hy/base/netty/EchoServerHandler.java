@@ -8,6 +8,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.CharsetUtil;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * Created with IntelliJ IDEA.
  * User: HYu
@@ -39,13 +41,26 @@ public class EchoServerHandler extends ChannelInboundHandlerAdapter {
         System.out.println(
                 "Client " + ctx.channel().remoteAddress() + " connected");
     }
+    private AtomicInteger atomicInteger = new AtomicInteger();
     //读取数据，一次读取不完多次读取
     @Override
     public void channelRead(ChannelHandlerContext ctx,
                             Object msg) {
         ByteBuf in = (ByteBuf) msg;
-        System.out.println("Server received: " + in.toString(CharsetUtil.UTF_8));        //2
-        ctx.write(in);                            //3
+        int i = atomicInteger.addAndGet(1);
+        //1.换行符来区分
+//        String lineSeparator = System.getProperty("line.separator");
+//        String message =  i +in.toString(CharsetUtil.UTF_8) + lineSeparator;
+        //2.自定义 分隔符
+//        String message =  i +in.toString(CharsetUtil.UTF_8) + EchoServer.DELIMITER_STR;
+//        System.out.println("Server received: " + message);        //2
+//        ctx.write(Unpooled.copiedBuffer(message.getBytes()));                            //3
+        //3.消息定长发送
+        String message =  i + EchoServer.FIXED_MESSAGE;
+        System.out.println("Server received: " + message);
+        ByteBuf byteBuf = Unpooled.buffer(EchoServer.FIXED_MESSAGE.length());
+        byteBuf.writeBytes(EchoServer.FIXED_MESSAGE.getBytes());
+        ctx.write(byteBuf);
     }
     //读取数据完成后
     @Override

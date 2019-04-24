@@ -1,12 +1,17 @@
 package com.hy.base.netty;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.DelimiterBasedFrameDecoder;
+import io.netty.handler.codec.FixedLengthFrameDecoder;
+import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.util.concurrent.Future;
 
 import java.net.InetSocketAddress;
@@ -21,7 +26,8 @@ import java.net.InetSocketAddress;
 public class EchoServer {
 
     private final int port;
-
+    public static final String DELIMITER_STR = "_HY_DELIMITER_";
+    public static final String FIXED_MESSAGE = "this is a messagte";
     public EchoServer(int port) {
         this.port = port;
     }
@@ -89,7 +95,14 @@ public class EchoServer {
                     .localAddress(port).childHandler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 protected void initChannel(SocketChannel ch) throws Exception {
-                    ch.pipeline().addLast(new EchoServerHandler(), new EchoClientHandler());
+                    //1.换行符来区分
+//                            ch.pipeline().addLast(new LineBasedFrameDecoder(1024*1000));
+                    //2.自定义 分隔符
+//                    ByteBuf byteBuf = Unpooled.copiedBuffer(EchoServer.DELIMITER_STR.getBytes());
+//                    ch.pipeline().addLast(new DelimiterBasedFrameDecoder(1024*1000, byteBuf));
+                    //3.消息定长发送
+                    ch.pipeline().addLast(new FixedLengthFrameDecoder(EchoServer.FIXED_MESSAGE.length()));
+                    ch.pipeline().addLast(new EchoServerHandler());
                 }
             }).childOption(ChannelOption.TCP_NODELAY, true);
             ChannelFuture channelFuture = serverBootstrap.bind().sync();

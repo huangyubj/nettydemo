@@ -1,12 +1,17 @@
 package com.hy.base.netty;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.DelimiterBasedFrameDecoder;
+import io.netty.handler.codec.FixedLengthFrameDecoder;
+import io.netty.handler.codec.LineBasedFrameDecoder;
 
 import java.net.InetSocketAddress;
 
@@ -40,8 +45,15 @@ public class EchoClient {
                         @Override
                         public void initChannel(SocketChannel ch)
                                 throws Exception {
-                            ch.pipeline().addLast(
-                                    new EchoClientHandler());
+
+                            //1.换行符来区分
+//                            ch.pipeline().addLast(new LineBasedFrameDecoder(1024*1000));
+                            //2.自定义 分隔符
+//                            ByteBuf byteBuf = Unpooled.copiedBuffer(EchoServer.DELIMITER_STR.getBytes());
+//                            ch.pipeline().addLast(new DelimiterBasedFrameDecoder(1024*1000, byteBuf));
+                            //3.消息定长发送
+                            ch.pipeline().addLast(new FixedLengthFrameDecoder(EchoServer.FIXED_MESSAGE.length()));
+                            ch.pipeline().addLast(new EchoClientHandler());
                         }
                     });
             ChannelFuture f = b.connect().sync();        //6
