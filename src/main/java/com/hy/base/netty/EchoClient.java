@@ -30,12 +30,12 @@ public class EchoClient {
         new EchoClient("127.0.0.1", 10101).start();
     }
     public void start() throws Exception {
-        EventLoopGroup group = new NioEventLoopGroup();
+        EventLoopGroup group = new NioEventLoopGroup();/*线程组*/
         try {
-            Bootstrap b = new Bootstrap();                //1
+            Bootstrap b = new Bootstrap();                //1/*客户端启动必备*/  Bootstrap
             b.group(group)                                //2
-                    .channel(NioSocketChannel.class)            //3
-                    .remoteAddress(new InetSocketAddress(host, port))    //4
+                    .channel(NioSocketChannel.class)            //3 /*指明使用NIO进行网络通讯*/  NioSocketChannel
+                    .remoteAddress(new InetSocketAddress(host, port))    //4 /*配置远程服务器的地址*/
                     .handler(new ChannelInitializer<SocketChannel>() {    //5
                         @Override
                         public void initChannel(SocketChannel ch)
@@ -44,12 +44,30 @@ public class EchoClient {
                                     new EchoClientHandler());
                         }
                     });
-
             ChannelFuture f = b.connect().sync();        //6
 
             f.channel().closeFuture().sync();            //7
+
         } finally {
             group.shutdownGracefully().sync();            //8
+        }
+    }
+
+    public void starttoo() throws InterruptedException {
+        EventLoopGroup eventExecutors = new NioEventLoopGroup();
+        try {
+            Bootstrap bootstrap = new Bootstrap();
+            bootstrap.group(eventExecutors)
+                    .channel(NioSocketChannel.class)
+                    .remoteAddress(new InetSocketAddress(host, port))
+                    .handler(new ChannelInitializer<SocketChannel>() {
+                        @Override
+                        protected void initChannel(SocketChannel ch) throws Exception {
+                            ch.pipeline().addLast(new EchoClientHandler());
+                        }
+                    });
+        }finally {
+            eventExecutors.shutdownGracefully().sync();
         }
     }
 }

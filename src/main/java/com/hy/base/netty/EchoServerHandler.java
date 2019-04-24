@@ -19,8 +19,8 @@ import io.netty.util.CharsetUtil;
 public class EchoServerHandler extends ChannelInboundHandlerAdapter {
 
     /**
-     * 1.@Sharable 标识这类的实例之间可以在 channel 里面共享
-     *
+     * 1.@Sharable 标识这类的实例之间可以在 channel 里面共享,说明这个handler是线程安全的，可以在多线程共享使用
+     *   此时需要保证线程安全
      * 2.日志消息输出到控制台
      *
      * 3.将所接收的消息返回给发送者。注意，这还没有冲刷数据
@@ -31,7 +31,6 @@ public class EchoServerHandler extends ChannelInboundHandlerAdapter {
      *
      * 6.关闭通道
      */
-
     /**
      * 每个信息入站都会调用
      */
@@ -40,6 +39,7 @@ public class EchoServerHandler extends ChannelInboundHandlerAdapter {
         System.out.println(
                 "Client " + ctx.channel().remoteAddress() + " connected");
     }
+    //读取数据，一次读取不完多次读取
     @Override
     public void channelRead(ChannelHandlerContext ctx,
                             Object msg) {
@@ -47,12 +47,14 @@ public class EchoServerHandler extends ChannelInboundHandlerAdapter {
         System.out.println("Server received: " + in.toString(CharsetUtil.UTF_8));        //2
         ctx.write(in);                            //3
     }
+    //读取数据完成后
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
         ctx.writeAndFlush(Unpooled.EMPTY_BUFFER)//4
                 .addListener(ChannelFutureListener.CLOSE);
     }
 
+    //异常处理
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx,
                                 Throwable cause) {

@@ -3,9 +3,11 @@ package com.hy.base.netty;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.util.concurrent.Future;
 
 import java.net.InetSocketAddress;
 
@@ -25,7 +27,7 @@ public class EchoServer {
     }
 
     public static void main(String[] args) throws Exception {
-        new EchoServer(10101).start();
+        new EchoServer(10101).startToo();
     }
 
     /**
@@ -40,10 +42,10 @@ public class EchoServer {
         NioEventLoopGroup group = new NioEventLoopGroup(); //3
         try {
 //            4.创建 ServerBootstrap
-            ServerBootstrap b = new ServerBootstrap();
+            ServerBootstrap b = new ServerBootstrap();  //ServerBootstrap
             b.group(group)                                //4
 //            5.指定使用 NIO 的传输 Channel
-                    .channel(NioServerSocketChannel.class)        //5
+                    .channel(NioServerSocketChannel.class)        //5   NioServerSocketChannel
 //            6.设置 socket 地址使用所选的端口
                     .localAddress(new InetSocketAddress(port))    //6
 //            7.添加 EchoServerHandler 到 Channel 的 ChannelPipeline
@@ -52,7 +54,8 @@ public class EchoServer {
                         public void initChannel(SocketChannel ch)
                                 throws Exception {
                             ch.pipeline().addLast(
-                                    new EchoServerHandler());
+                                    new EchoServerHandler());  //  Sharable的handler可以共享  即 只new 一个实例   EchoServerHandler esh = new EchoServerHandler();
+                                                                //  addLast(esh);
                         }
                     });
 //            8.绑定的服务器;sync 等待服务器关闭
@@ -63,6 +66,36 @@ public class EchoServer {
         } finally {
 //            10.关机的 EventLoopGroup，释放所有资源。
             group.shutdownGracefully().sync();            //10
+        }
+    }
+
+
+    public void startToo() throws InterruptedException {
+        //一个EventLoop可绑定多个Channle
+        //ChannlePipeline 链接ChannelHanddler
+
+//        1.bootstrp
+//        2.group
+//        3.指定channel
+//        4.设置地址localAddress
+//        5.服务添加childHanddler 处理器，客户端添加handdler,一个ChannelHandler 可以直接new，多个用ChannelInitializer，用ChannelPipeline添加多个
+//        5.1为pipeline添加handler处理器
+//        6.服务bind地址
+//        7.关闭future
+        NioEventLoopGroup nioEventLoopGroup = new NioEventLoopGroup();
+        try{
+            ServerBootstrap serverBootstrap = new ServerBootstrap();
+            serverBootstrap.group(nioEventLoopGroup).channel(NioServerSocketChannel.class)
+                    .localAddress(port).childHandler(new ChannelInitializer<SocketChannel>() {
+                @Override
+                protected void initChannel(SocketChannel ch) throws Exception {
+                    ch.pipeline().addLast(new EchoServerHandler(), new EchoClientHandler());
+                }
+            }).childOption(ChannelOption.TCP_NODELAY, true);
+            ChannelFuture channelFuture = serverBootstrap.bind().sync();
+            channelFuture.channel().closeFuture().sync();
+        }finally {
+            nioEventLoopGroup.shutdownGracefully().sync();
         }
     }
 }
