@@ -32,8 +32,8 @@ public class BusiHandler extends ChannelInboundHandlerAdapter {
         HttpMethod httpMethod = fullHttpRequest.method();
         //处理get请求
         String body = fullHttpRequest.content().toString(CharsetUtil.UTF_8);
+        System.out.println(uri + "---请求的消息为：" + body);
         if(HttpMethod.GET.equals(httpMethod)){
-            System.out.println(uri + "---请求的消息为：" + body);
             result = new Date().toString() +  "--get message " + body + " and reveive";
             send(ctx,result, HttpResponseStatus.OK);
         }else if(HttpMethod.POST.equals(httpMethod)){

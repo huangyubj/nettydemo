@@ -19,6 +19,12 @@ import java.security.cert.CertificateException;
  * Date: 2019/4/29
  * Time: 14:25
  * Project: nettydemo
+ * FullHttpRequest 和FullHttpResponse 消息是特殊的子类型，分别代表了完整的请求和响应。所有类型的HTTP 消息（FullHttpRequest、LastHttpContent等等）都实现了HttpObject 接口。
+ * HttpRequestEncoder 将HttpRequest、HttpContent 和LastHttpContent 消息编码为字节
+ * HttpResponseEncoder 将HttpResponse、HttpContent 和LastHttpContent 消息编码为字节
+ * HttpRequestDecoder 将字节解码为HttpRequest、HttpContent 和LastHttpContent 消息
+ * HttpResponseDecoder 将字节解码为HttpResponse、HttpContent 和LastHttpContent 消息
+ *
  */
 public class HttpServer {
     private boolean isSSL;
@@ -46,7 +52,7 @@ public class HttpServer {
 
             final SslContext sslContext;
             if(this.isSSL){
-                //netty为我们提供的ssl加密，缺省
+                //netty为我们提供的ssl加密，缺省，SslContext
                 SelfSignedCertificate selfSignedCertificate = new SelfSignedCertificate();
                 sslContext = SslContextBuilder.forServer(selfSignedCertificate.certificate(), selfSignedCertificate.privateKey()).build();
             }else{
@@ -54,9 +60,8 @@ public class HttpServer {
             }
             serverBootstrap.group(eventExecutors)
                     .channel(NioServerSocketChannel.class)
-                    .localAddress(10102)
                     .childHandler(new ServerHandlerInitial(sslContext));
-            ChannelFuture channelFuture = serverBootstrap.bind().sync();
+            ChannelFuture channelFuture = serverBootstrap.bind(10102).sync();
             channelFuture.channel().closeFuture().sync();
         }finally {
             eventExecutors.shutdownGracefully().sync();

@@ -34,9 +34,9 @@ public class ServerHandlerInitial extends ChannelInitializer {
                 .addLast("encoder", new HttpResponseEncoder())
 //                对request 请求体进行解码
                 .addLast("decoder", new HttpRequestDecoder())
-//               聚合http请求
-                .addLast("aggre", new HttpObjectAggregator(1024*1024))
-//                添加请求内容压缩
+//               聚合http请求,由于HTTP 的请求和响应可能由许多部分组成，因此你需要聚合它们以形成完整的消息。
+                .addLast("aggre", new HttpObjectAggregator(10*1024*1024))
+//                添加请求内容压缩,同时支持gzip 和deflate
                 .addLast("compressor", new HttpContentCompressor())
 //                处理http业务
                 .addLast("busi", new BusiHandler());
