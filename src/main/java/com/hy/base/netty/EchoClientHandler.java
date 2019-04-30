@@ -2,6 +2,8 @@ package com.hy.base.netty;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.CharsetUtil;
@@ -24,15 +26,26 @@ public class EchoClientHandler extends SimpleChannelInboundHandler {
         //3.消息定长发送
         ByteBuf byteBuf;
         String lineSeparator = "";
+        Channel channel = ctx.channel();
         for (int i = 0; i < 100; i++) {
             //3消息定长发送
             byteBuf = Unpooled.buffer(EchoServer.FIXED_MESSAGE.length());
             byteBuf.writeBytes(EchoServer.FIXED_MESSAGE.getBytes());
-            ctx.writeAndFlush(byteBuf);
+//            ChannelFuture channelFuture = ctx.writeAndFlush(byteBuf);
+            //为什么用channel多次写就报错
+//            ChannelFuture channelFuture = channel.writeAndFlush(byteBuf);
             //1、2
-//            String msg = "粘包半包,拆包!" + lineSeparator;
-//            ctx.writeAndFlush(Unpooled.copiedBuffer(msg, //2
-//                    CharsetUtil.UTF_8));
+            String msg = "粘包半包,拆包!" + lineSeparator;
+            ChannelFuture channelFuture = ctx.writeAndFlush(Unpooled.copiedBuffer(msg, //2
+                    CharsetUtil.UTF_8));
+            channelFuture.addListener((future -> {
+                if (future.isSuccess()) {                //4
+                    System.out.println("-----------------------------------Write successful");
+                } else {
+                    System.err.println("-----------------------------------Write error");    //5
+                    future.cause().printStackTrace();
+                }
+            }));
         }
     }
     @Override

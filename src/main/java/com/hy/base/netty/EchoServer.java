@@ -12,9 +12,11 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import io.netty.handler.codec.FixedLengthFrameDecoder;
 import io.netty.handler.codec.LineBasedFrameDecoder;
+import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.Future;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created with IntelliJ IDEA.
@@ -103,6 +105,11 @@ public class EchoServer {
                     //3.消息定长发送
                     ch.pipeline().addLast(new FixedLengthFrameDecoder(EchoServer.FIXED_MESSAGE.length()));
                     ch.pipeline().addLast(new EchoServerHandler());
+                    //数据长度限制处理
+                    ch.pipeline().addLast(new FrameChunkDecode());
+                    //心跳检测处理
+                    ch.pipeline().addLast(new IdleStateHandler(0, 0, 60, TimeUnit.SECONDS))
+                            .addLast(new IdleStateHandlerInitializer.HeatChannelHandler());
                 }
             }).childOption(ChannelOption.TCP_NODELAY, true);
             ChannelFuture channelFuture = serverBootstrap.bind().sync();
