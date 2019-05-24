@@ -30,8 +30,8 @@ public class SwaggerConfig {
         return new ApiInfoBuilder()
                 .title("Swagger2 RESTful APIs")
                 .description("Swagger2 RESTful APIs")
-                .termsOfServiceUrl("http://www.xiangxueketang.cn/")
-                .contact(new Contact("enjoy","cn.xiangxueketang","enjoy@enjoy.cn"))
+                .termsOfServiceUrl("http://www.baidu.com/")
+                .contact(new Contact("hy","https://github.com/huangyubj/nettydemo","hy00870@163.com"))
                 .version("1.0.0")
                 .build();
     }
